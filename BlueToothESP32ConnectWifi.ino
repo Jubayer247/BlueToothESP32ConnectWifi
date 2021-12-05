@@ -102,12 +102,41 @@ boolean hasWifiCredentials() {
 
 
 void setSSIDFromBluetooth() {
+  // Set WiFi to station mode and disconnect from an AP if it was previously connected
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100);
+  String ssid_list[11];
+  // WiFi.scanNetworks will return the number of networks found
+  int n = WiFi.scanNetworks();
+  Serial.println("scan done");
+  if (n == 0) {
+    Serial.println("no networks found");
+  } else {
+    Serial.print(n);
+    ssid_list[n] ;// = {"ssid0", "ssid1", "ssid2", "ssid3"};
+    Serial.println(" networks found");
+    for (int i = 0; i < n; ++i) {
+      // Print SSID and RSSI for each network found
+      Serial.print(i + 1);
+      Serial.print(": ");
+      Serial.print(WiFi.SSID(i));
+      ssid_list[i] = WiFi.SSID(i);
+      Serial.print(" (");
+      Serial.print(WiFi.RSSI(i));
+      Serial.print(")");
+      Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " " : "*");
+      delay(10);
+    }
+  }
+  Serial.println("");
+
   ESP_BT.begin("ESP32_LED_Control"); //Name of your Bluetooth Signal
   while (true) {
     if (ESP_BT.connected()) {
       ESP_BT.println("Chose your Wifi Name");
       ESP_BT.println();
-      String ssid_list[] = {"ssid0", "ssid1", "ssid2", "ssid3"};
+
 
       byte size_array = sizeof(ssid_list) / sizeof(ssid_list[0]);
       //Serial.println(size_array);

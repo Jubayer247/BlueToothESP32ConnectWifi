@@ -1,4 +1,9 @@
 #include "BluetoothSerial.h" //Header File for Serial Bluetooth, will be added by default into Arduino
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
 #include "ArduinoNvs.h"
 #include <WiFi.h>
 bool res;
@@ -28,7 +33,8 @@ void setup() {
   NVS.begin("storage");
   is_wifi_cred_exists = hasWifiCredentials();
   if (!is_wifi_cred_exists) {
-    setSSIDFromPCSerial();
+    // setSSIDFromPCSerial();
+    setSSIDFromBluetooth();
   }
   String WIFI_SSID = NVS.getString(nvs_ssid_key);
   String  WIFI_PASSWORD = NVS.getString(nvs_wifi_pswd_key);
@@ -99,7 +105,16 @@ void setSSIDFromBluetooth() {
   ESP_BT.begin("ESP32_LED_Control"); //Name of your Bluetooth Signal
   while (true) {
     if (ESP_BT.connected()) {
-      ESP_BT.println("Enter your SSID");
+      ESP_BT.println("Chose your Wifi Name");
+      ESP_BT.println();
+      String ssid_list[] = {"ssid0", "ssid1", "ssid2", "ssid3"};
+
+      byte size_array = sizeof(ssid_list) / sizeof(ssid_list[0]);
+      //Serial.println(size_array);
+
+      for (int i = 0; i < size_array; i++) {
+        ESP_BT.println(ssid_list[i]);
+      }
       continue_input = true;
     }
     delay(50);
@@ -110,6 +125,7 @@ void setSSIDFromBluetooth() {
           break;
         }
         if (ESP_BT.available()) {
+
           byte r = ESP_BT.read();
           if (char(r) != '\n') {
             if (r != 13 && r != 10 && char(r) != '\0') {
